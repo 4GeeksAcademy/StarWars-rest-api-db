@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User
+from models import db, User, Character, Favorites, Planet
 #from models import Person
 
 app = Flask(__name__)
@@ -36,14 +36,75 @@ def handle_invalid_usage(error):
 def sitemap():
     return generate_sitemap(app)
 
-@app.route('/user', methods=['GET'])
-def handle_hello():
+#Este Endpoint crea un nuevo usuario
+@app.route('/user', methods=['POST'])
+def create_one_user():
+
+    user = request.json()
+
+    user_created= User(name=user["name"], last_name=user["last_name"], email=user["email"], 
+                       password=user["password"])
+    db.session.add(user_created)
+    db.session.commit()
 
     response_body = {
-        "msg": "Hello, this is your GET /user response "
+        "msg": "User created sucessfully"
     }
 
     return jsonify(response_body), 200
+
+#Este Endpoint obtiene todos los personajes
+@app.route('/all_characters', methods=['GET'])
+def get_all_characters():
+    characters= Character.query.all()
+    if characters == None:
+        return jsonify({"msg": "Characters not found"}), 404
+    else:
+        characters_serialized =  list(map(lambda item: item.serialize(), characters))
+        return jsonify(characters_serialized), 200
+
+#Este Endpoint obtiene 1 personaje
+@app.route('/character/<int:id>', methods=['GET'])
+def get_one_character(id):
+    character= Character.query.filter_by(id=id).first()
+    if character == None:
+        return jsonify({"msg": "Character not found"}), 404
+    else:
+        character_serialized = character.serialized()
+        return jsonify(character_serialized), 200
+    
+    
+#Este Endpoint obtiene los favoritos de cada usuario por ID
+@app.route('/user/<int:id>/favorites', methods=['GET'])
+def get_user_favorites(id):
+    favorites= Favorites.query.filter_by(user_id= id).all()
+    if favorites == []:
+        return jsonify({"msg": "Favorites not found"}), 400
+    else:
+        favorite_serialized = list(map(lambda item: item.serialize(), favorites))
+        return jsonify(favorite_serialized), 200
+
+#Este Endpoint obtiene todos los planetas
+@app.route('/all_planets', methods=['GET'])
+def get_all_planets():
+    planets= Planet.query.all()
+    if planets == None:
+        return jsonify({"msg": "Planets not found"}), 404
+    else:
+        planets_serialized =  list(map(lambda item: item.serialize(), planets))
+        return jsonify(planets_serialized), 200
+    
+#Este Endpoint obtiene 1 planeta
+@app.route('/planet/<int:id>', methods=['GET'])
+def get_one_planet(id):
+    planet= Planet.query.filter_by(id=id).first()
+    if planet == None:
+        return jsonify({"msg": "Planet not found"}), 404
+    else:
+        planet_serialized = planet.serialized()
+        return jsonify(planet_serialized), 200
+
+
 
 # this only runs if `$ python src/app.py` is executed
 if __name__ == '__main__':
