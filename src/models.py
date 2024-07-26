@@ -7,7 +7,7 @@ class User(db.Model):
     name = db.Column(db.String(50), nullable=False)
     last_name = db.Column(db.String(50), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(80), unique=False, nullable=False)
+    password = db.Column(db.String(80), nullable=False)
     is_active = db.Column(db.Boolean(), unique=False, nullable=False)
     date_of_suscription = db.Column(db.Date, nullable=False)
     favorites = db.relationship('Favorites', backref='favorites_user', lazy=True)
@@ -38,13 +38,14 @@ class Favorites(db.Model):
             return f'User Id: {self.user_id}'
 
     def serialize(self):
-            return {
-                "id": self.id,
-                "user": self.user_id,
-                "planet": self.planet_id,
-                "vehicle": self.vehicle_id,
-                "character": self.character_id,
-            }
+        if self.character_id:
+            return {"character": self.character_id, "id": self.id, "user": self.user_id}
+        elif self.planet_id:
+            return {"planet": self.planet_id, "id": self.id, "user": self.user_id}
+        elif self.vehicle_id:
+            return {"vehicle": self.vehicle_id, "id": self.id, "user": self.user_id}
+        else:
+            return {"id": self.id, "user": self.user_id}
     
     
 class Planet(db.Model):

@@ -36,22 +36,15 @@ def handle_invalid_usage(error):
 def sitemap():
     return generate_sitemap(app)
 
-#Este Endpoint crea un nuevo usuario
-@app.route('/user', methods=['POST'])
-def create_one_user():
-
-    user = request.json()
-
-    user_created= User(name=user["name"], last_name=user["last_name"], email=user["email"], 
-                       password=user["password"])
-    db.session.add(user_created)
-    db.session.commit()
-
-    response_body = {
-        "msg": "User created sucessfully"
-    }
-
-    return jsonify(response_body), 200
+#Este Endpoint lista todos los usuarios del blog
+@app.route('/all_users', methods=['GET'])
+def get_all_users():
+    users= User.query.all()
+    if users == None:
+        return jsonify({"msg": "Users not found"}), 404
+    else:
+        users_serialized =  list(map(lambda item: item.serialize(), users))
+        return jsonify(users_serialized), 200
 
 #Este Endpoint obtiene todos los personajes
 @app.route('/all_characters', methods=['GET'])
@@ -72,8 +65,7 @@ def get_one_character(id):
     else:
         character_serialized = character.serialize()
         return jsonify(character_serialized), 200
-    
-    
+       
 #Este Endpoint obtiene todos los planetas
 @app.route('/all_planets', methods=['GET'])
 def get_all_planets():
@@ -145,6 +137,33 @@ def delete_character_favorite(character_id, user_id):
         db.session.delete(favorite)
         db.session.commit()
         return jsonify({"msg": "Favorite has been deleted"}), 200
+
+#Este Endpoint añade un nuevo personaje favorito al usuario actual con el id = character_id
+@app.route('/favorite/user/<int:user_id>/character/<int:character_id>/', methods=['POST'])
+def add_favorite_character(user_id, character_id):
+    user = User.query.get(user_id)
+    character = Character.query.get(character_id)
+    if not user or not character:
+        return jsonify({"msg": "User or character not found"}), 404
+    else:
+        new_favorite_character = Favorites(user_id = user_id, character_id = character_id)
+        db.session.add(new_favorite_character)
+        db.session.commit()
+    return jsonify(new_favorite_character.serialize()), 200
+
+#Este Endpoint añade un nuevo planeta favorito al usuario actual con el id = planet_id
+@app.route('/favorite/user/<int:user_id>/planet/<int:planet_id>/', methods=['POST'])
+def add_favorite_planet(user_id, planet_id):
+    user = User.query.get(user_id)
+    planet = Planet.query.get(planet_id)
+    if not user or not planet:
+        return jsonify({"msg": "User or planet not found"}), 404
+    else:
+        new_favorite_planet = Favorites(user_id = user_id, planet_id = planet_id)
+        db.session.add(new_favorite_planet)
+        db.session.commit()
+    return jsonify(new_favorite_planet.serialize()), 200
+
 
 
 # this only runs if `$ python src/app.py` is executed
