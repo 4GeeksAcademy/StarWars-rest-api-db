@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User, Character, Favorites, Planet
+from models import db, User, Character, Favorites, Planet, Vehicle
 #from models import Person
 
 app = Flask(__name__)
@@ -70,20 +70,10 @@ def get_one_character(id):
     if character == None:
         return jsonify({"msg": "Character not found"}), 404
     else:
-        character_serialized = character.serialized()
+        character_serialized = character.serialize()
         return jsonify(character_serialized), 200
     
     
-#Este Endpoint obtiene los favoritos de cada usuario por ID
-@app.route('/user/<int:id>/favorites', methods=['GET'])
-def get_user_favorites(id):
-    favorites= Favorites.query.filter_by(user_id= id).all()
-    if favorites == []:
-        return jsonify({"msg": "Favorites not found"}), 400
-    else:
-        favorite_serialized = list(map(lambda item: item.serialize(), favorites))
-        return jsonify(favorite_serialized), 200
-
 #Este Endpoint obtiene todos los planetas
 @app.route('/all_planets', methods=['GET'])
 def get_all_planets():
@@ -101,9 +91,60 @@ def get_one_planet(id):
     if planet == None:
         return jsonify({"msg": "Planet not found"}), 404
     else:
-        planet_serialized = planet.serialized()
+        planet_serialized = planet.serialize()
         return jsonify(planet_serialized), 200
+    
+#Este Endpoint obtiene todos los vehiculos
+@app.route('/all_vehicles', methods=['GET'])
+def get_all_vehicles():
+    vehicles= Vehicle.query.all()
+    if vehicles == None:
+        return jsonify({"msg": "Vehicles not found"}), 404
+    else:
+        vehicles_serialized =  list(map(lambda item: item.serialize(), vehicles))
+        return jsonify(vehicles_serialized), 200
+    
+#Este Endpoint obtiene 1 vehiculo
+@app.route('/vehicle/<int:id>', methods=['GET'])
+def get_one_vehicle(id):
+    vehicle= Planet.query.filter_by(id=id).first()
+    if vehicle == None:
+        return jsonify({"msg": "Vehicle not found"}), 404
+    else:
+        vehicle_serialized = vehicle.serialize()
+        return jsonify(vehicle_serialized), 200
 
+#Este Endpoint obtiene los favoritos de cada usuario por ID
+@app.route('/user/<int:id>/favorites', methods=['GET'])
+def get_user_favorites(id):
+    favorites= Favorites.query.filter_by(user_id= id).all()
+    if favorites == []:
+        return jsonify({"msg": "Favorites not found"}), 404
+    else:
+        favorite_serialized = list(map(lambda item: item.serialize(), favorites))
+        return jsonify(favorite_serialized), 200
+    
+#Este Endpoint Elimina un planet favorito con el id 
+@app.route('/favorite/user/<int:user_id>/planet/<int:planet_id>/', methods=['DELETE'])
+def delete_planet_favorite(planet_id, user_id):
+    favorite= Favorites.query.filter_by(user_id= user_id, planet_id= planet_id).first()
+    if favorite == None:
+        return jsonify({"msg": "Favorites not found"}), 404
+    else:
+        db.session.delete(favorite)
+        db.session.commit()
+        return jsonify({"msg": "Favorite has been deleted"}), 200
+
+#Este Endpoint Elimina un personaje favorito con el id 
+@app.route('/favorite/user/<int:user_id>/character/<int:character_id>/', methods=['DELETE'])
+def delete_character_favorite(character_id, user_id):
+    favorite= Favorites.query.filter_by(user_id= user_id, character_id= character_id).first()
+    if favorite == None:
+        return jsonify({"msg": "Favorites not found"}), 404
+    else:
+        db.session.delete(favorite)
+        db.session.commit()
+        return jsonify({"msg": "Favorite has been deleted"}), 200
 
 
 # this only runs if `$ python src/app.py` is executed
