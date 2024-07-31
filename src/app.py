@@ -164,6 +164,50 @@ def add_favorite_planet(user_id, planet_id):
         db.session.commit()
     return jsonify(new_favorite_planet.serialize()), 200
 
+#Este Endpoint crea un nuevo PERSONAJE
+@app.route('/new_character', methods=['POST'])
+def post_character():
+    character = request.get_json()
+    if not isinstance(character['name'], str) or len(character['name'].strip()) == 0:
+         return({'error':'"name" must be a string'}), 400
+    if not isinstance(character['gender'], str) or len(character['gender'].strip()) == 0:
+         return({'error':'"gender" must be a string'}), 400
+    if not isinstance(character['eye_color'], str) or len(character['eye_color'].strip()) == 0:
+         return({'error':'"eye_color" must be a string'}), 400
+    character_created = Character(name=character['name'],gender=character['gender'],eye_color=character['eye_color'])
+    db.session.add(character_created)
+    db.session.commit()
+    return jsonify('Character added'), 200
+
+#Este Endpoint crea un nuevo PLANETA
+@app.route('/new_planet', methods=['POST'])
+def post_planet():
+    planet = request.get_json()
+    if not isinstance(planet['name'], str) or len(planet['name'].strip()) == 0:
+         return({'error':'"name" must be a string'}), 400
+    if not isinstance(planet['population'], str) or len(planet['population'].strip()) == 0:
+         return({'error':'"population" must be a string'}), 400
+    if not isinstance(planet['diameter'], str) or len(planet['diameter'].strip()) == 0:
+         return({'error':'"diameter" must be a string'}), 400
+    planet_created = Planet(name=planet['name'],population=planet['population'],diameter=planet['diameter'])
+    db.session.add(planet_created)
+    db.session.commit()
+    return jsonify('Planet added'), 200
+
+#Este Endpoint crea un nuevo VEHÍCULO
+@app.route('/new_vehicle', methods=['POST'])
+def post_vehicle():
+    vehicle = request.get_json()
+    if not isinstance(vehicle['name'], str) or len(vehicle['name'].strip()) == 0:
+         return({'error':'"name" must be a string'}), 400
+    if not isinstance(vehicle['model'], str) or len(vehicle['model'].strip()) == 0:
+         return({'error':'"model" must be a string'}), 400
+    if not isinstance(vehicle['size'], str) or len(vehicle['size'].strip()) == 0:
+         return({'error':'"size" must be a string'}), 400
+    vehicle_created = Vehicle(name=vehicle['name'],model=vehicle['model'],size=vehicle['size'])
+    db.session.add(vehicle_created)
+    db.session.commit()
+    return jsonify('Vehicle added'), 200
 
 
 # this only runs if `$ python src/app.py` is executed
